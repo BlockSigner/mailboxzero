@@ -400,7 +400,7 @@ class SMTPMailboxHandler(_Message):
 # configuration per domain for which we will accept emails
 _DEFAULT_DOMAINS = {
     "mb0.wtte.ch": {"max_email_age": 600},
-    "qmq.ch": {"max_email_age": 600},
+    "qmq.ch": {"max_email_age": 600}
 }
 
 
@@ -408,8 +408,10 @@ def start_all(
     base_maildir="/tmp/mb0",
     gc_interval=180,
     debug=False,
+    http_host="127.0.0.1",
     http_port=8880,
     smtp_port=25,
+    smtp_hostname="mail.mb0.wtte.ch",
     domains=_DEFAULT_DOMAINS,
 ):
     # Setup mailbox directories for all the domains we handle
@@ -424,11 +426,14 @@ def start_all(
     else:
         logging.getLogger().setLevel(logging.INFO)
 
+    logging.info("Starting for domains:")
+    logging.info(domains)
+
     http_server = tornado.httpserver.HTTPServer(
         WebApplication(base_maildir, debug=debug),
         xheaders=True,
     )
-    http_server.listen(http_port, "127.0.0.1")
+    http_server.listen(http_port, http_host)
 
     loop = asyncio.get_event_loop()
 
@@ -437,9 +442,9 @@ def start_all(
             SMTPServer,
             SMTPMailboxHandler(base_maildir, domains, message_class=EmailMessage),
             enable_SMTPUTF8=True,
-            hostname="mail.mb0.wtte.ch",
+            hostname=smtp_hostname
         ),
-        "0.0.0.0",
+        http_host,
         smtp_port,
     )
     loop.run_until_complete(coro)
@@ -469,7 +474,18 @@ def main():
     parser = get_argparser()
     args = parser.parse_args()
 
-    start_all(debug=args.debug)
+    # Check for customization env vars
+    domains_env = os.getenv("DOMAINS", "").strip()
+    options = {
+        "debug": args.debug,
+        "domains": json.loads(domains_env) if domains_env else None,
+        "http_host": os.getenv("HTTP_HOST"),
+        "http_port": os.getenv("HTTP_PORT"),
+        "smtp_hostname": os.getenv("SMTP_HOSTNAME")
+    }
+
+    # Pass only non-None values to start_all
+    start_all(**{k: v for k, v in options.items() if v is not None})
 
     loop = asyncio.get_event_loop()
     loop.run_forever()
