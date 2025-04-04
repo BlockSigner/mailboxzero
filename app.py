@@ -400,6 +400,11 @@ class SMTPMailboxHandler(_Message):
 
 
 def start_all(
+    domains,
+    http_host,
+    http_port,
+    smtp_port,
+    smtp_hostname,
     base_maildir="/tmp/mb0",
     gc_interval=180,
     debug=False
@@ -465,7 +470,7 @@ def main():
     args = parser.parse_args()
 
     # Check for customization env vars
-    domain_list = list(str(os.getenv("DOMAINS", DEFAULTS["domains"])).split(",")),
+    domain_list = os.getenv("DOMAINS", DEFAULTS["domains"]).split(",")
     max_email_age = os.getenv("MAX_EMAIL_AGE", DEFAULTS["max_email_age"])
     options = {
         "debug": args.debug,
@@ -473,10 +478,14 @@ def main():
         "http_host": os.getenv("HTTP_HOST", DEFAULTS["http_host"]),
         "http_port": os.getenv("HTTP_PORT", DEFAULTS["http_port"]),
         "smtp_port": os.getenv("SMTP_PORT", DEFAULTS["smtp_port"]),
-        "smtp_hostname": os.getenv("SMTP_HOSTNAME", DEFAULTS["http_hosmtp_hostnamest"])
+        "smtp_hostname": os.getenv("SMTP_HOSTNAME", DEFAULTS["smtp_hostname"])
     }
 
     start_all(**options)
 
     loop = asyncio.get_event_loop()
     loop.run_forever()
+
+
+if __name__ == "__main__":
+    main()
