@@ -1,0 +1,24 @@
+name: Build and push container image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  call-sonarqube-scan:
+      uses: BlockSigner/skribble-workflows/.github/workflows/sonarqube_general.yml@main
+      secrets: inherit
+
+  build-push:
+    name: Build and push container image
+    uses: BlockSigner/skribble-workflows/.github/workflows/build-push.yml@main
+    secrets: inherit
+
+  call-snyk-scan:
+    name: Call Snyk container scan
+    needs: build-push
+    uses: BlockSigner/skribble-workflows/.github/workflows/snyk_scan.yml@main
+    secrets: inherit
