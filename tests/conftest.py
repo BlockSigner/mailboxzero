@@ -45,7 +45,8 @@ def smtp_port():
 
 @pytest.fixture
 def base_url(http_port):
-    return f"http://127.0.0.1:{http_port}/api"
+    http_host = os.getenv("HTTP_HOST", "127.0.0.1")
+    return f"http://{http_host}:{http_port}/api"
 
 
 @pytest.fixture
