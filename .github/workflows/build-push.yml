@@ -9,8 +9,8 @@ on:
 
 jobs:
   call-sonarqube-scan:
-      uses: BlockSigner/skribble-workflows/.github/workflows/sonarqube_general.yml@main
-      secrets: inherit
+    uses: BlockSigner/skribble-workflows/.github/workflows/sonarqube_general.yml@main
+    secrets: inherit
 
   build-push:
     name: Build and push container image
